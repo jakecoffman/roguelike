@@ -54,7 +54,7 @@ function updateMarker() {
     marker.x = map.getTileX(game.input.activePointer.worldX) * 32;
     marker.y = map.getTileY(game.input.activePointer.worldY) * 32;
 
-    if (game.input.mousePointer.isDown)
+    if (game.input.mousePointer.isDown || game.input.pointer1.isDown)
     {
         tileset.putTile(currentTile, map.getTileX(marker.x), map.getTileY(marker.y), map);
     }
