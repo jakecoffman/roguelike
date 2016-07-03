@@ -1,25 +1,27 @@
-var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', {
+(function () {
+
+  var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', {
     preload: preload,
     create: create,
     update: update,
     render: render
-});
+  });
 
-function preload() {
+  function preload() {
 
     game.load.image('ground_1x1', 'assets/ground_1x1.png');
 
-}
+  }
 
-var tileset;
-var map;
+  var tileset;
+  var map;
 
-var marker;
-var currentTile = 0;
+  var marker;
+  var currentTile = 0;
 
-var cursors;
+  var cursors;
 
-function create() {
+  function create() {
 
     game.stage.backgroundColor = '#2d2d2d';
 
@@ -47,63 +49,62 @@ function create() {
     game.input.addMoveCallback(updateMarker, this);
 
     cursors = game.input.keyboard.createCursorKeys();
-}
+  }
 
-function updateMarker() {
+  function updateMarker() {
 
     marker.x = map.getTileX(game.input.activePointer.worldX) * 32;
     marker.y = map.getTileY(game.input.activePointer.worldY) * 32;
 
-    if (game.input.mousePointer.isDown || game.input.pointer1.isDown)
-    {
-        tileset.putTile(currentTile, map.getTileX(marker.x), map.getTileY(marker.y), map);
+    if (game.input.mousePointer.isDown || game.input.pointer1.isDown) {
+      tileset.putTile(currentTile, map.getTileX(marker.x), map.getTileY(marker.y), map);
     }
 
-}
+  }
 
-function update() {
+  function update() {
 
-    if (cursors.left.isDown)
-    {
-        game.camera.x -= 4;
+    if (cursors.left.isDown) {
+      game.camera.x -= 4;
     }
-    else if (cursors.right.isDown)
-    {
-        game.camera.x += 4;
+    else if (cursors.right.isDown) {
+      game.camera.x += 4;
     }
 
-    if (cursors.up.isDown)
-    {
-        game.camera.y -= 4;
+    if (cursors.up.isDown) {
+      game.camera.y -= 4;
     }
-    else if (cursors.down.isDown)
-    {
-        game.camera.y += 4;
+    else if (cursors.down.isDown) {
+      game.camera.y += 4;
     }
 
     move_camera_by_pointer(game.input.mousePointer);
     move_camera_by_pointer(game.input.pointer1);
-}
+  }
 
-var cameraPosition;
+  var cameraPosition;
 
-function move_camera_by_pointer(pointer) {
-    if (!pointer.timeDown) { return; }
-    if (pointer.isDown && !pointer.targetObject) {
-        if (cameraPosition) {
-            game.camera.x += cameraPosition.x - pointer.position.x;
-            game.camera.y += cameraPosition.y - pointer.position.y;
-        }
-        cameraPosition = pointer.position.clone();
+  function move_camera_by_pointer(pointer) {
+    if (!pointer.timeDown) {
+      return;
     }
-    if (pointer.isUp) { cameraPosition = null; }
-}
+    if (pointer.isDown && !pointer.targetObject) {
+      if (cameraPosition) {
+        game.camera.x += cameraPosition.x - pointer.position.x;
+        game.camera.y += cameraPosition.y - pointer.position.y;
+      }
+      cameraPosition = pointer.position.clone();
+    }
+    if (pointer.isUp) {
+      cameraPosition = null;
+    }
+  }
 
-function render() {
+  function render() {
     //game.debug.text('Hello map!', 16, 570);
-}
+  }
 
-function createTileSelector() {
+  function createTileSelector() {
 
     //  Our tile selection window
     var tileSelector = game.add.group();
@@ -117,9 +118,10 @@ function createTileSelector() {
 
     var tileStrip = tileSelector.create(1, 1, 'ground_1x1');
     tileStrip.inputEnabled = true;
-    tileStrip.events.onInputDown.add(function(sprite, pointer) {
-        currentTile = game.math.snapToFloor(pointer.x, 32) / 32;
+    tileStrip.events.onInputDown.add(function (sprite, pointer) {
+      currentTile = game.math.snapToFloor(pointer.x, 32) / 32;
     }, this);
 
     tileSelector.fixedToCamera = true;
-}
+  }
+})();
