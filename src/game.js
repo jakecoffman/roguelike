@@ -90,7 +90,7 @@ var cameraPosition;
 function move_camera_by_pointer(pointer) {
     if (!pointer.timeDown) { return; }
     if (pointer.isDown && !pointer.targetObject) {
-        if (camera) {
+        if (cameraPosition) {
             game.camera.x += cameraPosition.x - pointer.position.x;
             game.camera.y += cameraPosition.y - pointer.position.y;
         }
