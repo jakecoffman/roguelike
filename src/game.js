@@ -61,8 +61,8 @@
       wasDown = true;
       if (downPoint) {
         // move the camera by the amount the mouse has moved since last update
-        this.game.camera.x = downPoint.x - this.game.input.activePointer.position.x;
-        this.game.camera.y = downPoint.y - this.game.input.activePointer.position.y;
+        this.game.camera.x += downPoint.x - this.game.input.activePointer.position.x;
+        this.game.camera.y += downPoint.y - this.game.input.activePointer.position.y;
 
         if (!equal(downPoint, this.game.input.activePointer.position)) {
           wasDrag = true;
