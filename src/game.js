@@ -10,6 +10,7 @@
   function preload() {
     game.stage.smoothed = false;
     game.load.image('ground_1x1', 'assets/ground_1x1.png');
+    game.load.image('foresttiles', 'assets/foresttiles_0.png');
   }
 
   var tileset;
@@ -19,7 +20,6 @@
   var currentTile = 0;
 
   function create() {
-
     game.stage.backgroundColor = '#2d2d2d';
 
     //  Creates a blank tilemap
@@ -36,6 +36,14 @@
     //  Resize the map
     map.resizeWorld();
     // game.world.scale.setTo(2, 2);
+
+    var rotMap = new ROT.Map.DividedMaze(40, 30);
+    var mapCallback = function(x, y, value) {
+      if (value === 1) {
+        tileset.putTile(1, x, y, map);
+      }
+    };
+    rotMap.create(mapCallback.bind(this));
 
     //  Create our tile selector at the top of the screen
     createTileSelector();
@@ -56,10 +64,6 @@
   var downPoint;
 
   function update() {
-    if (this.game.input.pointer2.isDown) {
-      game.debug.text('Wow!', 16, 16);
-    }
-
     if (this.game.input.activePointer.isDown) {
 
       wasDown = true;
@@ -88,7 +92,10 @@
   var wasDrag = false;
 
   function render() {
-    //game.debug.text('Hello map!', 16, 570);
+    game.debug.text('Hello map!', 16, 570);
+    if (this.game.input.pointer2.isDown) {
+      game.debug.text('Wow!', 16, 16);
+    }
   }
 
   function createTileSelector() {
