@@ -1,6 +1,6 @@
 (function () {
 
-  var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', {
+  var game = new Phaser.Game('100%', '100%', Phaser.CANVAS, 'phaser-example', {
     preload: preload,
     create: create,
     update: update,
@@ -8,7 +8,6 @@
   });
 
   function preload() {
-
     game.load.image('ground_1x1', 'assets/ground_1x1.png');
 
   }
@@ -18,8 +17,6 @@
 
   var marker;
   var currentTile = 0;
-
-  var cursors;
 
   function create() {
 
@@ -37,6 +34,7 @@
 
     //  Resize the map
     map.resizeWorld();
+    // game.world.scale.setTo(2, 2);
 
     //  Create our tile selector at the top of the screen
     createTileSelector();
