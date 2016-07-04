@@ -47,58 +47,41 @@
     marker.drawRect(0, 0, 32, 32);
 
     game.input.addMoveCallback(updateMarker, this);
-
-    cursors = game.input.keyboard.createCursorKeys();
   }
 
   function updateMarker() {
-
     marker.x = map.getTileX(game.input.activePointer.worldX) * 32;
     marker.y = map.getTileY(game.input.activePointer.worldY) * 32;
-
-    if (game.input.mousePointer.isDown || game.input.pointer1.isDown) {
-      tileset.putTile(currentTile, map.getTileX(marker.x), map.getTileY(marker.y), map);
-    }
-
   }
+
+  var downPoint;
 
   function update() {
+    if (this.game.input.activePointer.isDown) {
+      wasDown = true;
+      if (downPoint) {
+        // move the camera by the amount the mouse has moved since last update
+        this.game.camera.x = downPoint.x - this.game.input.activePointer.position.x;
+        this.game.camera.y = downPoint.y - this.game.input.activePointer.position.y;
 
-    if (cursors.left.isDown) {
-      game.camera.x -= 4;
-    }
-    else if (cursors.right.isDown) {
-      game.camera.x += 4;
-    }
-
-    if (cursors.up.isDown) {
-      game.camera.y -= 4;
-    }
-    else if (cursors.down.isDown) {
-      game.camera.y += 4;
-    }
-
-    move_camera_by_pointer(game.input.mousePointer);
-    move_camera_by_pointer(game.input.pointer1);
-  }
-
-  var cameraPosition;
-
-  function move_camera_by_pointer(pointer) {
-    if (!pointer.timeDown) {
-      return;
-    }
-    if (pointer.isDown && !pointer.targetObject) {
-      if (cameraPosition) {
-        game.camera.x += cameraPosition.x - pointer.position.x;
-        game.camera.y += cameraPosition.y - pointer.position.y;
+        if (!equal(downPoint, this.game.input.activePointer.position)) {
+          wasDrag = true;
+        }
       }
-      cameraPosition = pointer.position.clone();
-    }
-    if (pointer.isUp) {
-      cameraPosition = null;
+      // set new drag origin to current position
+      downPoint = this.game.input.activePointer.position.clone();
+    } else if (wasDown) {
+      if (!wasDrag) {
+        tileset.putTile(currentTile, map.getTileX(marker.x), map.getTileY(marker.y), map);
+      }
+      wasDrag = false;
+      wasDown = false;
+      downPoint = null;
     }
   }
+
+  var wasDown = false;
+  var wasDrag = false;
 
   function render() {
     //game.debug.text('Hello map!', 16, 570);
@@ -124,4 +107,9 @@
 
     tileSelector.fixedToCamera = true;
   }
+
+  function equal(point1, point2) {
+    return point1.x === point2.x && point1.y === point2.y;
+  }
+
 })();
