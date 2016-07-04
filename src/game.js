@@ -9,7 +9,6 @@
 
   function preload() {
     game.load.image('ground_1x1', 'assets/ground_1x1.png');
-
   }
 
   var tileset;
@@ -31,6 +30,7 @@
     //  Creates a new blank layer and sets the tileset dimensions.
     //  In this case the tileset is 40x30 tiles in size and the tiles are 32x32 pixels in size.
     map = tileset.create('level1', 40, 30, 32, 32);
+    map.setScale(2);
 
     //  Resize the map
     map.resizeWorld();
@@ -42,14 +42,14 @@
     // mouse pointer in creation mode
     marker = game.add.graphics();
     marker.lineStyle(2, 0x000000, 1);
-    marker.drawRect(0, 0, 32, 32);
+    marker.drawRect(0, 0, 64, 64);
 
     game.input.addMoveCallback(updateMarker, this);
   }
 
   function updateMarker() {
-    marker.x = map.getTileX(game.input.activePointer.worldX) * 32;
-    marker.y = map.getTileY(game.input.activePointer.worldY) * 32;
+    marker.x = map.getTileX(game.input.activePointer.worldX / 2) * 64;
+    marker.y = map.getTileY(game.input.activePointer.worldY / 2) * 64;
   }
 
   var downPoint;
@@ -70,7 +70,7 @@
       downPoint = this.game.input.activePointer.position.clone();
     } else if (wasDown) {
       if (!wasDrag) {
-        tileset.putTile(currentTile, map.getTileX(marker.x), map.getTileY(marker.y), map);
+        tileset.putTile(currentTile, map.getTileX(marker.x / 2), map.getTileY(marker.y / 2), map);
       }
       wasDrag = false;
       wasDown = false;
@@ -92,7 +92,7 @@
 
     var tileSelectorBackground = game.make.graphics();
     tileSelectorBackground.beginFill(0x000000, 0.5);
-    tileSelectorBackground.drawRect(0, 0, 800, 34);
+    tileSelectorBackground.drawRect(0, 0, 800, 66);
     tileSelectorBackground.endFill();
 
     tileSelector.add(tileSelectorBackground);
@@ -100,10 +100,13 @@
     var tileStrip = tileSelector.create(1, 1, 'ground_1x1');
     tileStrip.inputEnabled = true;
     tileStrip.events.onInputDown.add(function (sprite, pointer) {
-      currentTile = game.math.snapToFloor(pointer.x, 32) / 32;
+      currentTile = game.math.snapToFloor(pointer.x, 64) / 64;
     }, this);
+    tileStrip.scale.x = 2;
+    tileStrip.scale.y = 2;
 
-    tileSelector.fixedToCamera = true;
+    tileSelector.fixedToCamera = false;
+    return tileSelector;
   }
 
   function equal(point1, point2) {
