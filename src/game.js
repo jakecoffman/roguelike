@@ -8,6 +8,7 @@
   });
 
   function preload() {
+    game.stage.smoothed = false;
     game.load.image('ground_1x1', 'assets/ground_1x1.png');
   }
 
@@ -55,7 +56,12 @@
   var downPoint;
 
   function update() {
+    if (this.game.input.pointer2.isDown) {
+      game.debug.text('Wow!', 16, 16);
+    }
+
     if (this.game.input.activePointer.isDown) {
+
       wasDown = true;
       if (downPoint) {
         // move the camera by the amount the mouse has moved since last update
