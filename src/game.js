@@ -10,65 +10,140 @@
   function preload() {
     game.stage.smoothed = false;
     game.load.image('ground_1x1', 'assets/ground_1x1.png');
-    game.load.image('foresttiles', 'assets/foresttiles_0.png');
+    game.load.spritesheet('hero', 'assets/hero.png', 32, 32);
   }
 
-  var tileset;
-  var map;
-
+  var tilemap;
+  var layer;
+  var map = {}; // actual map, key is string "x,y"
   var marker;
   var currentTile = 0;
-  var zoom = 3;
+  var zoom = 1;
+  var player;
+  var fov = new ROT.FOV.PreciseShadowcasting(lightPasses);
 
   function create() {
+    // game.add.plugin(Phaser.Plugin.Debug);
+
     game.stage.backgroundColor = '#2d2d2d';
 
     //  Creates a blank tilemap
-    tileset = game.add.tilemap();
+    tilemap = game.add.tilemap();
 
-    //  Add a Tileset image to the tileset
-    tileset.addTilesetImage('ground_1x1');
+    tilemap.addTilesetImage('ground_1x1');
 
     //  Creates a new blank layer and sets the tileset dimensions.
     //  In this case the tileset is 40x30 tiles in size and the tiles are 32x32 pixels in size.
-    map = tileset.create('level1', 40, 30, 32, 32);
-    map.setScale(zoom);
+    layer = tilemap.create('level1', 40, 30, 32, 32);
+    layer.setScale(zoom);
 
     //  Resize the map
-    map.resizeWorld();
+    layer.resizeWorld();
     // game.world.scale.setTo(2, 2);
 
     var rotMap = new ROT.Map.Uniform(40, 30);
-    var mapCallback = function(x, y, value) {
+    var mapCallback = function (x, y, value) {
       if (value === 1) {
-        tileset.putTile(game.rnd.integerInRange(0, 12), x, y, map);
+        map[x+','+y] = value;
+        tilemap.putTile(0, x, y, layer);
+      } else {
+        if (!player) {
+          map[x+','+y] = 'player';
+          player = game.add.sprite(0,  0, 'hero');
+          player.tileX = x;
+          player.tileY = y;
+          setXY(player);
+        }
       }
     };
     rotMap.create(mapCallback.bind(this));
+    player.scale.setTo(zoom);
+
+    resetVision();
+    computeFOV();
 
     //  Create our tile selector at the top of the screen
     //createTileSelector();
 
     // mouse pointer in creation mode
     marker = game.add.graphics();
-    marker.lineStyle(2, 0x000000, 1);
-    marker.drawRect(0, 0, 32 * zoom, 32 * zoom);
+    makeMarker();
 
     game.input.addMoveCallback(updateMarker, this);
+    game.input.mouse.mouseWheelCallback = mouseWheelCallback;
+  }
 
-    game.input.mouse.mouseWheelCallback = function mouseWheel(event) {
-      if (game.input.mouse.wheelDelta == Phaser.Mouse.WHEEL_UP) {
-        zoom += 0.01;
-      } else {
-        zoom -= 0.01;
+  function resetVision() {
+    for (var x = 0; x < 40; x++) {
+      for (var y = 0; y < 30; y++) {
+        var tile = tilemap.getTile(x, y, 0);
+        if (tile) {
+          tile.alpha = 0;
+        }
       }
-      map.setScale(zoom);
     }
   }
 
+  function computeFOV() {
+    // seen tiles should fade unless still being seen
+    for (var x = 0; x < 40; x++) {
+      for (var y = 0; y < 30; y++) {
+        var tile = tilemap.getTile(x, y, 0);
+        if (tile) {
+          tile.alpha = tile.alpha > 0 ? 0.5 : 0;
+        }
+      }
+    }
+    fov.compute(player.tileX, player.tileY, 10, function (x, y, r, visibility) {
+      var tile = tilemap.getTile(x, y, 0);
+      if (tile) {
+        tile.alpha = visibility > 0 ? 1 : 0;
+      }
+      tilemap.layers[0].dirty = true;
+    });
+  }
+
+  function lightPasses(x, y) {
+    var key = x + ',' + y;
+    if (x == player.tileX && y == player.tileY) {
+      return true;
+    }
+    // we only keep track of obstacles currently, this may need to change?
+    return !(key in map);
+  }
+
+  function mouseWheelCallback(event) {
+    if (game.input.mouse.wheelDelta == Phaser.Mouse.WHEEL_UP) {
+      zoom += 0.01;
+    } else {
+      zoom -= 0.01;
+    }
+    if (zoom < 1) {
+      zoom = 1;
+    }
+    layer.setScale(zoom);
+    marker.clear();
+    makeMarker();
+    updateMarker();
+    player.scale.setTo(zoom);
+    setXY(player, player.tileX, player.tileY);
+    layer.resizeWorld();
+  }
+
+  // given tile x,y set world x, y
+  function setXY(sprite) {
+    sprite.x = sprite.tileX * 32 * zoom;
+    sprite.y = sprite.tileY * 32 * zoom;
+  }
+
+  function makeMarker() {
+    marker.lineStyle(2, 0xFFFFFFF, 1);
+    marker.drawRect(0, 0, 32 * zoom, 32 * zoom);
+  }
+
   function updateMarker() {
-    marker.x = map.getTileX(game.input.activePointer.worldX / zoom) * 32 * zoom;
-    marker.y = map.getTileY(game.input.activePointer.worldY / zoom) * 32 * zoom;
+    marker.x = layer.getTileX(game.input.activePointer.worldX / zoom) * 32 * zoom;
+    marker.y = layer.getTileY(game.input.activePointer.worldY / zoom) * 32 * zoom;
   }
 
   var downPoint;
@@ -90,7 +165,11 @@
       downPoint = this.game.input.activePointer.position.clone();
     } else if (wasDown) {
       if (!wasDrag) {
-        tileset.putTile(currentTile, map.getTileX(marker.x / zoom), map.getTileY(marker.y / zoom), map);
+        //tilemap.putTile(currentTile, layer.getTileX(marker.x / zoom), layer.getTileY(marker.y / zoom), layer);
+        player.tileX = layer.getTileX(marker.x / zoom);
+        player.tileY = layer.getTileY(marker.y / zoom);
+        setXY(player);
+        computeFOV();
       }
       wasDrag = false;
       wasDown = false;
@@ -102,7 +181,7 @@
   var wasDrag = false;
 
   function render() {
-    game.debug.text('Hello map!', 16, 570);
+    game.debug.text('Zoom: ' + zoom, 16, 570);
     if (this.game.input.pointer2.isDown) {
       game.debug.text('Wow!', 16, 16);
     }
